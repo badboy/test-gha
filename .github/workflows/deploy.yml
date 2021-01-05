@@ -65,13 +65,18 @@ jobs:
         if: matrix.target == 'x86_64-unknown-linux-musl'
         run: cargo build --release --target ${{ matrix.target }}
 
+      - name: Post Setup | Extract tag name
+        shell: bash
+        run: echo "##[set-output name=tag;]$(echo ${GITHUB_REF#refs/tags/})"
+        id: extract_tag
+
       - name: Post Setup | Prepare artifacts [Windows]
         if: matrix.os == 'windows-latest'
         run: |
           mkdir target/stage
           cd target/${{ matrix.target }}/release
           strip test-gha.exe
-          7z a ../../stage/test-gha-$(git describe --tags)-${{ matrix.name }} test-gha.exe
+          7z a ../../stage/test-gha-${{ steps.extract_tag.outputs.tag }}-${{ matrix.name }} test-gha.exe
           cd -
 
       - name: Post Setup | Prepare artifacts [-nix]
@@ -80,13 +85,13 @@ jobs:
           mkdir target/stage
           cd target/${{ matrix.target }}/release
           strip test-gha
-          tar czvf ../../stage/test-gha-$(git describe --tags)-${{ matrix.name }} test-gha
+          tar czvf ../../stage/test-gha-${{ steps.extract_tag.outputs.tag }}-${{ matrix.name }} test-gha
           cd -
 
       - name: Post Setup | Upload artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.name }}
+          name: test-gha-${{ steps.extract_tag.outputs.tag }}-${{ matrix.name }}
           path: target/stage/*
 
   # Create GitHub release with Rust build targets and release notes
