@@ -21,16 +21,16 @@ jobs:
         include:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
-            name: test-gha-x86_64-unknown-linux-gnu.tar.gz
+            name: x86_64-unknown-linux-gnu.tar.gz
           - target: x86_64-unknown-linux-musl
             os: ubuntu-latest
-            name: test-gha-x86_64-unknown-linux-musl.tar.gz
+            name: x86_64-unknown-linux-musl.tar.gz
           - target: x86_64-apple-darwin
             os: macOS-latest
-            name: test-gha-x86_64-apple-darwin.tar.gz
+            name: x86_64-apple-darwin.tar.gz
           - target: x86_64-pc-windows-msvc
             os: windows-latest
-            name: test-gha-x86_64-pc-windows-msvc.zip
+            name: x86_64-pc-windows-msvc.zip
     runs-on: ${{ matrix.os }}
     steps:
       - name: Setup | Checkout
@@ -70,7 +70,9 @@ jobs:
         run: |
           cd target/${{ matrix.target }}/release
           strip test-gha.exe
-          7z a ../../../${{ matrix.name }} test-gha.exe
+          tag=$(git describe)
+          mkdir ../../stage
+          7z a ../../stage/test-gha-${tag}-${{ matrix.name }} test-gha.exe
           cd -
 
       - name: Post Setup | Prepare artifacts [-nix]
@@ -78,14 +80,16 @@ jobs:
         run: |
           cd target/${{ matrix.target }}/release
           strip test-gha
-          tar czvf ../../../${{ matrix.name }} test-gha
+          tag=$(git describe)
+          mkdir ../../stage
+          tar czvf ../../stage/test-gha-${tag}-${{ matrix.name }} test-gha
           cd -
 
       - name: Post Setup | Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.name }}
-          path: ${{ matrix.name }}
+          path: target/stage/*
 
   # Create GitHub release with Rust build targets and release notes
   github_release:
