@@ -6,6 +6,9 @@ on:
     tags:
       - "*"
 
+env:
+  CRATE_NAME: test-gha
+
 jobs:
   # Build sources for every OS
   github_build:
@@ -75,8 +78,8 @@ jobs:
         run: |
           mkdir target/stage
           cd target/${{ matrix.target }}/release
-          strip test-gha.exe
-          7z a ../../stage/test-gha-${{ steps.extract_tag.outputs.tag }}-${{ matrix.name }} test-gha.exe
+          strip ${{ env.CRATE_NAME }}.exe
+          7z a ../../stage/${{ env.CRATE_NAME }}-${{ steps.extract_tag.outputs.tag }}-${{ matrix.target }} ${{ env.CRATE_NAME }}.exe
           cd -
 
       - name: Post Setup | Prepare artifacts [-nix]
@@ -84,14 +87,14 @@ jobs:
         run: |
           mkdir target/stage
           cd target/${{ matrix.target }}/release
-          strip test-gha
-          tar czvf ../../stage/test-gha-${{ steps.extract_tag.outputs.tag }}-${{ matrix.name }} test-gha
+          strip ${{ env.CRATE_NAME }}
+          tar czvf ../../stage/${{ env.CRATE_NAME }}-${{ steps.extract_tag.outputs.tag }}-${{ matrix.name }} ${{ env.CRATE_NAME }}
           cd -
 
       - name: Post Setup | Upload artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: test-gha-${{ steps.extract_tag.outputs.tag }}-${{ matrix.name }}
+          name: ${{ env.CRATE_NAME }}-${{ steps.extract_tag.outputs.tag }}-${{ matrix.name }}
           path: target/stage/*
 
   # Create GitHub release with Rust build targets and release notes
@@ -115,7 +118,7 @@ jobs:
       - name: Build | Publish
         uses: softprops/action-gh-release@v1
         with:
-          files: test-gha-*/test-gha-*
+          files: ${{ env.CRATE_NAME }}-*/${{ env.CRATE_NAME }}-*
           body_path: RELEASE.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
