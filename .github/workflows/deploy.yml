@@ -70,7 +70,7 @@ jobs:
         run: |
           cd target/${{ matrix.target }}/release
           strip test-gha.exe
-          tag=$(git describe)
+          tag=$(git describe --tags)
           mkdir ../../stage
           7z a ../../stage/test-gha-${tag}-${{ matrix.name }} test-gha.exe
           cd -
@@ -80,7 +80,7 @@ jobs:
         run: |
           cd target/${{ matrix.target }}/release
           strip test-gha
-          tag=$(git describe)
+          tag=$(git describe --tags)
           mkdir ../../stage
           tar czvf ../../stage/test-gha-${tag}-${{ matrix.name }} test-gha
           cd -
