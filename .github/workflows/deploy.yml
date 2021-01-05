@@ -108,9 +108,6 @@ jobs:
       - name: Setup | Artifacts
         uses: actions/download-artifact@v2
 
-      - name: Setup | Checksums
-        run: for file in test-gha-*/test-gha-*; do openssl dgst -sha256 -r "$file" | awk '{print $1}' > "${file}.sha256"; done
-
       - name: Setup | Release notes
         run: |
           git log -1 --pretty='%s' > RELEASE.md
