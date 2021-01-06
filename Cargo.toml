@@ -1,6 +1,6 @@
 [package]
 name = "test-gha"
-version = "0.2.3"
+version = "0.2.4-alpha.0"
 authors = ["Jan-Erik Rediger <janerik@fnordig.de>"]
 edition = "2018"
 description = "Test crate for testing out CI and automatic deploys"
