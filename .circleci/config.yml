@@ -79,16 +79,6 @@ jobs:
             # The token is set in CircleCI settings.
             # Need some sleep inbetween to ensure crates.io is updated.
 
-            pushd glean-core
-            cargo publish --verbose
-
-            sleep 30
-            pushd ffi
-            cargo publish --verbose
-            popd
-
-            sleep 30
-            pushd rlb
             cargo publish --verbose
 
 workflows:
