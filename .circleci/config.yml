@@ -6,7 +6,7 @@ definitions:
       branches:
         ignore: /.*/
       tags:
-        only: /^v.*/
+        only: /^.*/
 
 commands:
   setup-rust-toolchain:
