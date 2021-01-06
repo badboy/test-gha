@@ -1,0 +1,106 @@
+---
+version: 2.1
+
+definitions:
+  - release_filters: &release-filters
+      branches:
+        ignore: /.*/
+      tags:
+        only: /^v.*/
+
+commands:
+  setup-rust-toolchain:
+    parameters:
+      rust-version:
+        type: string
+        default: "stable"
+    steps:
+      - run:
+          name: Turn on RUST_BACKTRACE and RUST_LOG for any job that installs rustc
+          command: |
+              echo "export RUST_BACKTRACE=1" >> $BASH_ENV
+      - run:
+          name: Setup Rust toolchain
+          command: |
+            rustup install <<parameters.rust-version>>
+            rustup default <<parameters.rust-version>>
+            rustc --version
+
+  test-rust:
+    parameters:
+      rust-version:
+        type: string
+        default: "stable"
+    steps:
+      - checkout
+      - skip-if-doc-only
+      - setup-rust-toolchain:
+          rust-version: <<parameters.rust-version>>
+      - run:
+          name: Test
+          command: cargo test --all --verbose
+
+jobs:
+  Check Rust formatting:
+    docker:
+      - image: circleci/rust:latest
+    steps:
+      - checkout
+      - run: rustup component add rustfmt
+      - run: rustfmt --version
+      - run: cargo fmt -- --check
+
+  Lint Rust with clippy:
+    docker:
+      - image: circleci/rust:latest
+    steps:
+      - checkout
+      - run: rustup component add clippy
+      - run: cargo clippy --version
+      - run: cargo clippy --all --all-targets --all-features -- -D warnings
+
+  Rust tests - stable:
+    docker:
+      - image: circleci/rust:latest
+    steps:
+      - test-rust
+
+  Publish Rust crates:
+    docker:
+      - image: circleci/rust:latest
+    steps:
+      - checkout
+      - run:
+          name: Publish Cargo Package
+          command: |
+            # Login to crates.io so the following commands work
+            cargo login -- "$CRATES_IO_TOKEN"
+
+            # Publish all crates from CI.
+            # The token is set in CircleCI settings.
+            # Need some sleep inbetween to ensure crates.io is updated.
+
+            pushd glean-core
+            cargo publish --verbose
+
+            sleep 30
+            pushd ffi
+            cargo publish --verbose
+            popd
+
+            sleep 30
+            pushd rlb
+            cargo publish --verbose
+
+workflows:
+  version: 2
+
+  ci:
+    jobs:
+      - Lint Rust with clippy
+      - Rust tests - stable
+
+  release:
+    jobs:
+      - Publish Rust crates:
+          filters: *release-filters
