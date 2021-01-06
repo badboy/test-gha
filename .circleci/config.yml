@@ -33,7 +33,6 @@ commands:
         default: "stable"
     steps:
       - checkout
-      - skip-if-doc-only
       - setup-rust-toolchain:
           rust-version: <<parameters.rust-version>>
       - run:
